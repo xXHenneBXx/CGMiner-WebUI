@@ -1,0 +1,241 @@
+openapi: 3.1.0
+info:
+  title: CGMiner-Gekko Bridge API
+  description: >
+    REST API layer that forwards commands to a running cgminer-gekko instance
+    via its API TCP socket (port 4028).  
+    Supports stats, device discovery, frequency tuning, chip control,
+    reset operations, and autotune management for GekkoScience CompacF devices.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local bridge server
+
+paths:
+
+  /stats:
+    get:
+      summary: Get miner statistics
+      description: >
+        Returns the full "STATS" response from cgminer, including
+        hashrate, wait-factor, job counts, temperature if available,
+        and per-ASIC data.
+      responses:
+        '200':
+          description: Stats received from cgminer
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /devs:
+    get:
+      summary: Get connected devices
+      description: >
+        Returns the cgminer "DEVS" list: ASIC IDs, device models,
+        serial numbers, status, frequencies, chip count, etc.
+      responses:
+        '200':
+          description: Device list from cgminer
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /asic/{id}:
+    get:
+      summary: Get stats for a specific ASIC
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        '200':
+          description: ASIC stats
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /asic/{id}/frequency:
+    post:
+      summary: Set frequency for an ASIC
+      description: Sends an `ascset|{id},freq,{value}` command.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                frequency:
+                  type: integer
+                  description: Frequency in MHz
+                  example: 400
+      responses:
+        '200':
+          description: Frequency set response
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /asic/{id}/chip:
+    post:
+      summary: Set frequency for an individual chip
+      description: Sends `ascset|{id},chip,{chip}:{freq}`
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chip:
+                  type: integer
+                  description: Chip index
+                frequency:
+                  type: integer
+                  description: Frequency in MHz
+                  example: 410
+      responses:
+        '200':
+          description: Chip frequency response
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /asic/{id}/require:
+    post:
+      summary: Set "require" threshold for autotune
+      description: >
+        Sends `ascset|{id},require,{value}`  
+        If hashrate drops below this percentage, cgminer resets the device.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                threshold:
+                  type: number
+                  description: Fraction between 0.0 and 1.0
+                  example: 0.65
+      responses:
+        '200':
+          description: Threshold set response
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /asic/{id}/lock:
+    post:
+      summary: Lock frequency for an ASIC
+      description: Sends `ascset|{id},lockfreq`
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lock response
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /asic/{id}/unlock:
+    post:
+      summary: Unlock frequency for an ASIC
+      description: Sends `ascset|{id},unlockfreq`
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Unlock response
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /asic/{id}/usbprop:
+    post:
+      summary: Set USB propagation delay
+      description: >
+        Sends `ascset|{id},usbprop,{microseconds}`  
+        Controls USB timing; lower values reduce latency but increase CPU load.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                usbprop:
+                  type: integer
+                  description: Microseconds (200–1000 recommended)
+                  example: 800
+      responses:
+        '200':
+          description: USBProp response
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /asic/{id}/reset:
+    post:
+      summary: Reset an ASIC
+      description: Sends `ascset|{id},reset`
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Reset response
+          content:
+            application/json:
+              schema:
+                type: object
+
+components: {}

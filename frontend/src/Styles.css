@@ -1,0 +1,50 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+}
+
+.app-container {
+  display: flex;
+}
+
+.sidebar {
+  width: 200px;
+  background: #1f1f1f;
+  color: white;
+  height: 100vh;
+  padding: 1rem;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar li {
+  margin: 1rem 0;
+  cursor: pointer;
+}
+
+.main-content {
+  flex: 1;
+  padding: 1rem;
+}
+
+.header {
+  margin-bottom: 1rem;
+}
+
+.miner-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.miner-card {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  width: 220px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
