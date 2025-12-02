@@ -40,41 +40,21 @@ Your miners visible at http://<miner-ip>:4028
 1. Backend
 cd backend
 npm install
-node compac_f_bridge_backend.js
-
-
-Backend runs at:
-
-http://localhost:8080/stats
-
-2. Frontend
-
-Open a second terminal:
-
-cd frontend
-npm install
-npm run dev
-
+npm run dev:all
 
 Open the dashboard:
 
-http://localhost:3000/
+[http://localhost:5173/]
 
 # 🐧 Linux Setup (Ubuntu / Debian / Armbian)
 1. Backend
 cd backend
 npm install
-node compac_f_bridge_backend.js
-
-2. Frontend
-cd frontend
-npm install
-npm run dev
-
+npm run dev:all
 
 Open:
 
-http://<your-linux-ip>:3000/
+[http://localhost:5173/]
 
 # 🐋 Docker Deployment
 
@@ -86,22 +66,11 @@ docker compose up --build
 
 Then open:
 
-http://localhost:8080/
+http://localhost:5173/
 
 # 💡 Configuration
-Backend default CGMiner target:
-IP: 192.168.0.*
-Port: 4028
 
 
-To change this, edit:
-
-backend/compac_f_bridge_backend.js
-
-client.connect(4028, '192.168.0.200');
-
-
-(We will add multi-IP support later.)
 
 # 💻 Development Notes
 
