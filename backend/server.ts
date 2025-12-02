@@ -4,7 +4,7 @@ import { createCGMinerConnection, sendCGMinerCommand } from './cgminer.ts';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const CGMINER_HOST = process.env.CGMINER_HOST || '192.168.0.85';
+const CGMINER_HOST = process.env.CGMINER_HOST || 'YOUR_CGMINER HOST_IP'; // 'localhost' if runnning on host machine, Use Host IP of cgminer instead
 const CGMINER_PORT = parseInt(process.env.CGMINER_PORT || '4028');
 
 app.use(cors());
