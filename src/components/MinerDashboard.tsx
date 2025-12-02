@@ -88,8 +88,8 @@ export function MinerDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">CGMiner Dashboard</h1>
-              <p className="text-sm text-gray-600 mt-1">Created By: xXHenneBXx</p>
+              <h1 className="text-2xl font-bold text-blue-500">CGMiner Dashboard</h1>
+              <p className="text-sm text-cyan-400 mt-1">Created By: xXHenneBXx</p>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
@@ -156,6 +156,7 @@ export function MinerDashboard() {
                     hashrate: device.hashrate / 1000, // Convert MH → GH
                     mhs5s: device.mhs5s / 1000,
                     mhsAv: device.mhsAv / 1000,
+                    Frequency: device.frequency,
                   }}
                 />
               ))}
@@ -195,7 +196,7 @@ export function MinerDashboard() {
             <h3 className="text-sm font-semibold text-gray-700 mb-4">Performance</h3>
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">5 Second</span>
+                <span className="text-gray-600">5 Seconds</span>
                 <span className="font-medium">{((summary?.mhs5s || 0) / 1000).toFixed(2)} GH/s</span>
               </div>
               <div className="flex justify-between text-sm">
@@ -203,11 +204,11 @@ export function MinerDashboard() {
                 <span className="font-medium">{((summary?.mhs1m || 0) / 1000).toFixed(2)} GH/s</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">5 Minute</span>
+                <span className="text-gray-600">5 Minutes</span>
                 <span className="font-medium">{((summary?.mhs5m || 0) / 1000).toFixed(2)} GH/s</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">15 Minute</span>
+                <span className="text-gray-600">15 Minutes</span>
                 <span className="font-medium">{((summary?.mhs15m || 0) / 1000).toFixed(2)} GH/s</span>
               </div>
             </div>
@@ -218,15 +219,15 @@ export function MinerDashboard() {
             <h3 className="text-sm font-semibold text-gray-700 mb-4">Shares</h3>
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Accepted</span>
+                <span className="text-gray-600">Accepted Shares</span>
                 <span className="font-medium text-green-600">{summary?.accepted || 0}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Rejected</span>
+                <span className="text-gray-600">Rejected Shares</span>
                 <span className="font-medium text-red-600">{summary?.rejected || 0}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Stale</span>
+                <span className="text-gray-600">Stale Shares</span>
                 <span className="font-medium text-yellow-600">{summary?.stale || 0}</span>
               </div>
               <div className="flex justify-between text-sm">
@@ -241,15 +242,15 @@ export function MinerDashboard() {
             <h3 className="text-sm font-semibold text-gray-700 mb-4">Difficulty</h3>
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Accepted</span>
+                <span className="text-gray-600">Total Accepted</span>
                 <span className="font-medium">{(summary?.difficultyAccepted || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Rejected</span>
+                <span className="text-gray-600">Total Rejected</span>
                 <span className="font-medium">{(summary?.difficultyRejected || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Stale</span>
+                <span className="text-gray-600">Total Stale</span>
                 <span className="font-medium">{(summary?.difficultyStale || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm">
