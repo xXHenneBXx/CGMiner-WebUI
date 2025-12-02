@@ -1,9 +1,5 @@
-# GekkoScience-CompacF-WebUI
+# CG Miner Web UI 
 A Webpage Interface that shows live stats, change and or set settings while live mining through the CGMiner API
-
-# CompacF-WebUI
-
-A modern React-based dashboard + Node backend for monitoring multiple GekkoScience Compac F miners over CGMiner.
 
 # Features:
 
@@ -38,12 +34,11 @@ Your miners visible at http://<miner-ip>:4028
 
 # 🟦 Windows Setup
 1. Backend
-cd backend
+cd 
 npm install
 npm run dev:all
 
 Open the dashboard:
-
 [http://localhost:5173/]
 
 # 🐧 Linux Setup (Ubuntu / Debian / Armbian)
@@ -53,7 +48,6 @@ npm install
 npm run dev:all
 
 Open:
-
 [http://localhost:5173/]
 
 # 🐋 Docker Deployment
@@ -65,8 +59,7 @@ docker compose up --build
 
 
 Then open:
-
-http://localhost:5173/
+[http://localhost:5173/]
 
 # 💡 Configuration
 
@@ -74,8 +67,8 @@ http://localhost:5173/
 
 # 💻 Development Notes
 
-Frontend reloads automatically with npm run dev
-
-Backend auto-reload is optional (use nodemon)
+Frontend + Backend loads automatically with npm run dev:all
 
 Vite dev server supports hot-module-reload
+
+Help made By Bolt.new AI and ChatGPT
