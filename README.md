@@ -5,9 +5,7 @@ A Webpage Interface that shows live stats, change and or set settings while live
 
 Multi-miner detection
 
-Live stats refresh every 2 seconds
-
-Hashrate graph
+Live stats refresh every 5 seconds
 
 Per-miner metrics
 
