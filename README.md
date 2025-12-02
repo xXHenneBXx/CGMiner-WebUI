@@ -34,6 +34,7 @@ Your miners visible at http://<miner-ip>:4028
 
 # 🟦 Windows Setup
 npm install
+
 npm run dev:all
 
 Open the dashboard:
@@ -41,6 +42,7 @@ Open the dashboard:
 
 # 🐧 Linux Setup (Ubuntu / Debian / Armbian)
 npm install
+
 npm run dev:all
 
 Open:
@@ -51,6 +53,7 @@ Open:
 This runs backend + frontend together behind a single container.
 
 Build & Run
+
 docker compose up --build
 
 Then open:
