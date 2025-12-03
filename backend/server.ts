@@ -152,7 +152,166 @@ app.post('/api/control/stop', async (req: Request, res: Response) => {
   }
 });
 
+// Pool Management: Add Pool
+app.post('/api/pools/add', async (req: Request, res: Response) => {
+  try {
+    const { url, user, pass } = req.body;
+    const command = `addpool|${url},${user},${pass}`;
+    await sendCGMinerCommand(CGMINER_HOST, CGMINER_PORT, command);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error adding pool:', error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// Pool Management: Remove Pool
+app.post('/api/pools/remove', async (req: Request, res: Response) => {
+  try {
+    const { poolId } = req.body;
+    const command = `removepool|${poolId}`;
+    await sendCGMinerCommand(CGMINER_HOST, CGMINER_PORT, command);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error removing pool:', error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// Pool Management: Enable Pool
+app.post('/api/pools/enable', async (req: Request, res: Response) => {
+  try {
+    const { poolId } = req.body;
+    const command = `enablepool|${poolId}`;
+    await sendCGMinerCommand(CGMINER_HOST, CGMINER_PORT, command);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error enabling pool:', error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// Pool Management: Disable Pool
+app.post('/api/pools/disable', async (req: Request, res: Response) => {
+  try {
+    const { poolId } = req.body;
+    const command = `disablepool|${poolId}`;
+    await sendCGMinerCommand(CGMINER_HOST, CGMINER_PORT, command);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error disabling pool:', error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// Pool Management: Set Priority
+app.post('/api/pools/priority', async (req: Request, res: Response) => {
+  try {
+    const { priorities } = req.body;
+    const command = `poolpriority|${priorities.join(',')}`;
+    await sendCGMinerCommand(CGMINER_HOST, CGMINER_PORT, command);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error setting pool priority:', error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// Device Management: Enable Device
+app.post('/api/devices/enable', async (req: Request, res: Response) => {
+  try {
+    const { deviceId } = req.body;
+    const command = `ascenable|${deviceId}`;
+    await sendCGMinerCommand(CGMINER_HOST, CGMINER_PORT, command);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error enabling device:', error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// Device Management: Disable Device
+app.post('/api/devices/disable', async (req: Request, res: Response) => {
+  try {
+    const { deviceId } = req.body;
+    const command = `ascdisable|${deviceId}`;
+    await sendCGMinerCommand(CGMINER_HOST, CGMINER_PORT, command);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error disabling device:', error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// Device Management: Set Frequency
+app.post('/api/devices/frequency', async (req: Request, res: Response) => {
+  try {
+    const { deviceId, frequency } = req.body;
+    const command = `ascset|${deviceId},freq,${frequency}`;
+    await sendCGMinerCommand(CGMINER_HOST, CGMINER_PORT, command);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error setting device frequency:', error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// Device Management: Set Device Option
+app.post('/api/devices/set', async (req: Request, res: Response) => {
+  try {
+    const { deviceId, option, value } = req.body;
+    const command = value ? `ascset|${deviceId},${option},${value}` : `ascset|${deviceId},${option}`;
+    await sendCGMinerCommand(CGMINER_HOST, CGMINER_PORT, command);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error setting device option:', error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// Configuration: Get Config
+app.get('/api/config', async (req: Request, res: Response) => {
+  try {
+    const data = await sendCGMinerCommand(CGMINER_HOST, CGMINER_PORT, 'config');
+    res.json(data?.CONFIG?.[0] || {});
+  } catch (error) {
+    console.error('Error fetching config:', error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// Configuration: Set Config
+app.post('/api/config/set', async (req: Request, res: Response) => {
+  try {
+    const { name, value } = req.body;
+    const command = `setconfig|${name},${value}`;
+    await sendCGMinerCommand(CGMINER_HOST, CGMINER_PORT, command);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error setting config:', error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`CGMiner proxy server running on http://localhost:${PORT}`);
   console.log(`Connecting to CGMiner at ${CGMINER_HOST}:${CGMINER_PORT}`);
+  console.log('Available endpoints:');
+  console.log('  GET  /api/health');
+  console.log('  GET  /api/stats');
+  console.log('  GET  /api/devices');
+  console.log('  GET  /api/pools');
+  console.log('  GET  /api/config');
+  console.log('  POST /api/control/restart');
+  console.log('  POST /api/control/stop');
+  console.log('  POST /api/pools/add');
+  console.log('  POST /api/pools/remove');
+  console.log('  POST /api/pools/enable');
+  console.log('  POST /api/pools/disable');
+  console.log('  POST /api/pools/priority');
+  console.log('  POST /api/devices/enable');
+  console.log('  POST /api/devices/disable');
+  console.log('  POST /api/devices/frequency');
+  console.log('  POST /api/devices/set');
+  console.log('  POST /api/config/set');
 });

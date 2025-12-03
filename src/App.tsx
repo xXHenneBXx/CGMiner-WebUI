@@ -1,6 +1,9 @@
-import React from 'react';
-import { MinerDashboard } from './components/MinerDashboard';
+import React, { useState } from 'react';
 import { ReactNode } from 'react';
+import { Layout } from './components/Layout';
+import { HomePage } from './pages/HomePage';
+import { SettingsPage } from './pages/SettingsPage';
+import { ConfigurationPage } from './pages/ConfigurationPage';
 
 class ErrorBoundary extends React.Component<
   { children: ReactNode },
@@ -40,9 +43,26 @@ class ErrorBoundary extends React.Component<
 }
 
 function App() {
+  const [currentPage, setCurrentPage] = useState('home');
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'home':
+        return <HomePage />;
+      case 'settings':
+        return <SettingsPage />;
+      case 'config':
+        return <ConfigurationPage />;
+      default:
+        return <HomePage />;
+    }
+  };
+
   return (
     <ErrorBoundary>
-      <MinerDashboard />
+      <Layout currentPage={currentPage} onNavigate={setCurrentPage}>
+        {renderPage()}
+      </Layout>
     </ErrorBoundary>
   );
 }
