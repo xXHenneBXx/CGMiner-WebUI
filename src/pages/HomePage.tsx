@@ -65,7 +65,7 @@ export function HomePage() {
   if (error) {
     return (
       <div className="flex items-center justify-center p-4">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+        <div className="bg-gray-50 border border-red-200 rounded-lg p-6 max-w-md">
           <div className="flex items-center gap-3 text-red-800 mb-2">
             <AlertTriangle className="w-6 h-6" />
             <h2 className="text-lg font-semibold">Connection Error</h2>
@@ -176,19 +176,19 @@ export function HomePage() {
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">5 Seconds</span>
-              <span className="font-medium">{((summary?.mhs5s || 0) / 1000).toFixed(2)} GH/s</span>
+              <span className="font-medium text-green-600">{((summary?.mhs5s || 0) / 1000).toFixed(2)} GH/s</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">1 Minute</span>
-              <span className="font-medium">{((summary?.mhs1m || 0) / 1000).toFixed(2)} GH/s</span>
+              <span className="font-medium text-green-600">{((summary?.mhs1m || 0) / 1000).toFixed(2)} GH/s</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">5 Minutes</span>
-              <span className="font-medium">{((summary?.mhs5m || 0) / 1000).toFixed(2)} GH/s</span>
+              <span className="font-medium text-green-600">{((summary?.mhs5m || 0) / 1000).toFixed(2)} GH/s</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">15 Minutes</span>
-              <span className="font-medium">{((summary?.mhs15m || 0) / 1000).toFixed(2)} GH/s</span>
+              <span className="font-medium text-green-600">{((summary?.mhs15m || 0) / 1000).toFixed(2)} GH/s</span>
             </div>
           </div>
         </div>
@@ -210,7 +210,7 @@ export function HomePage() {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Best Share</span>
-              <span className="font-medium">{summary?.bestShare || 0}</span>
+              <span className="font-medium text-green-500">{summary?.bestShare || 0}</span>
             </div>
           </div>
         </div>
@@ -220,19 +220,19 @@ export function HomePage() {
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Total Accepted</span>
-              <span className="font-medium">{(summary?.difficultyAccepted || 0).toFixed(2)}</span>
+              <span className="font-medium text-green-600">{(summary?.difficultyAccepted || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Total Rejected</span>
-              <span className="font-medium">{(summary?.difficultyRejected || 0).toFixed(2)}</span>
+              <span className="font-medium text-red-600">{(summary?.difficultyRejected || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Total Stale</span>
-              <span className="font-medium">{(summary?.difficultyStale || 0).toFixed(2)}</span>
+              <span className="font-medium text-yellow-600">{(summary?.difficultyStale || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Total MH</span>
-              <span className="font-medium">{(summary?.totalMh || 0).toFixed(2)}</span>
+              <span className="font-medium text-green-500">{(summary?.totalMh || 0).toFixed(2)}</span>
             </div>
           </div>
         </div>
