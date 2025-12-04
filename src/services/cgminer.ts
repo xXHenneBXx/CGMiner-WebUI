@@ -1,6 +1,8 @@
 import { MinerStats, PoolInfo, DeviceInfo, CGMinerSummary } from '../types/miner';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+// Use the current hostname dynamically, fallback to environment variable
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:3001`;
+
 
 export class CGMinerAPI {
   private baseUrl: string;
