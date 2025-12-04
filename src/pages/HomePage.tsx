@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Activity, Zap, TrendingUp, AlertTriangle, Thermometer, Clock } from 'lucide-react';
+import { Activity, Zap, TrendingUp, AlertTriangle, Trophy, Clock } from 'lucide-react';
 import { cgminerAPI } from '../services/cgminer';
 import { CGMinerSummary, DeviceInfo, PoolInfo } from '../types/miner';
 import { StatCard } from '../components/StatCard';
@@ -113,11 +113,10 @@ export function HomePage() {
           icon={<Zap className="w-6 text-yellow-400 h-6" />}
         />
         <StatCard
-          title="Temperature"
-          value={devices[0]?.temperature || 0}
-          unit="°C"
-          icon={<Thermometer className="w-6 text-orange-500 h-6" />}
-          trend={devices[0]?.temperature > 75 ? 'down' : 'neutral'}
+          title="Blocks Found"
+          value={summary?.foundBlocks || 0}
+          icon={<Trophy className="w-6 text-yellow-500 h-6" />}
+          subtitle={`Network Blocks: ${summary?.networkBlocks || 0}`}
         />
         <StatCard
           title="Uptime"

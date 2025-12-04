@@ -35,6 +35,11 @@ export interface DeviceInfo {
   rejected: number;
   hardwareErrors: number;
   frequency: number;
+  chips?: number;
+  chipType?: string;
+  fanSpeed?: number;
+  mhs5s?: number;
+  mhsAv?: number;
 }
 
 export interface CGMinerSummary {

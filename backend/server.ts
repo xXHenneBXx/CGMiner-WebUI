@@ -80,6 +80,7 @@ app.get('/api/devices', async (req: Request, res: Response) => {
         utility: dev['Utility'] || 0,
         elapsed: dev['Elapsed'] || 0,
 		chips: dev['Chips'] || 1,
+		chipType: dev['Chip'] || dev['ChipModel'] || 'Unknown',
 		fanSpeed: dev['Fan Speed'] || 0,
       }));
       res.json(devices);

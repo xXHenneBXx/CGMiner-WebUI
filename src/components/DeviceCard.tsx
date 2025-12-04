@@ -57,16 +57,17 @@ export function DeviceCard({ device }: DeviceCardProps) {
             <Zap className="w-4 h-4 text-red-600" />
             <span className="text-xs text-gray-600">Frequency</span>
           </div>
-          <div className="text-lg font-bold text-yellow-400">{device.Frequency}</div>
+          <div className="text-lg font-bold text-yellow-400">{device.frequency}</div>
           <div className="text-xs text-gray-500">MHz</div>
         </div>
 
         <div className="bg-gray-50 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-1">
             <Cpu className="w-4 h-4 text-blue-600" />
-            <span className="text-xs text-gray-600">Chip Count</span>
+            <span className="text-xs text-gray-600">Chip Info</span>
           </div>
-          <div className="text-lg font-bold text-blue-700">{device.chips}</div>
+          <div className="text-lg font-bold text-blue-700">{device.chips} x {device.chipType || 'N/A'}</div>
+          <div className="text-xs text-gray-500">Count & Type</div>
         </div>
 
         <div className="bg-gray-50 rounded-lg p-3">
