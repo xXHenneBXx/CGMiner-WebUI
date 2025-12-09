@@ -79,3 +79,23 @@ CGMINER AND USING USB DEVICE(S) BUG- Clicking "Restart" will cause CG Miner to c
 working on a fix/workaround
 
 DOES NOT WORK ON FIREFOX !! USE CHROME, EDGE OR SAFARI 
+
+## Support This Project
+
+**Bitcoin(BTC):** `bc1qn9fwsaqfxnj622rvnf83hjy3lmfmtux9mk5e9s`
+
+**Stellar(XLM):** `GCP7GQQLXAOJMDP6ZCVFTZWNW5NGKWE2FZTBJHJ2HRJL4P7G4KIAHOVA` Memo: `293595506`
+
+**Shiba Inu(SHIB) ERC-20:** `0x671902A98F6dE872a79621de5e3c1Ae69543769B`
+
+**XRP:** `roV3VenzynmXXDZypxHdB56bEE8aXsfMP` Tag: `2666387270`
+
+**Dogecoin(DOGE):** `DEgaavUry7V5uV25xh8yWEc9wd44RjdohZ`
+
+**Binance(BNB):** `0x3105c2C7D88aA15f13e7AE57d1E28b7416ba638e`
+
+**BitcoinCash(BCH):** `bitcoincash:qzuheqchqcsp753gqyadhqm97afprvsnugskp30795`
+
+**Solana(SOL):** `6xk4BsWqFbrD3XJb1bCyFQdKHGdQB71PFn4A8qchCNT`
+
+**SushiSwap(SUSHI) ERC-20:** `0x671902A98F6dE872a79621de5e3c1Ae69543769B`
