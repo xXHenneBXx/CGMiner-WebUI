@@ -268,7 +268,7 @@ export function HomePage() {
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-blue-600">Device Status</h2>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-gray-400">
               {devices.length} Active {devices.length === 1 ? 'Device' : 'Devices'}
             </span>
           </div>
@@ -296,7 +296,7 @@ export function HomePage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-blue-600">Mining Pools</h2>
-          <span className=" text-sm text-gray-600">
+          <span className=" text-sm text-gray-400">
             {Array.isArray(pools) ? pools.length : 0} {Array.isArray(pools) && pools.length === 1 ? 'Pool' : 'Pools'}
           </span>
         </div>

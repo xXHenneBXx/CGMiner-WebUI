@@ -20,17 +20,17 @@ export function PoolCard({ pool }: PoolCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3 flex-1">
+    <div className="flex-1 bg-white rounded-lg shadow-md md:p-6">
+      <div className="flex-1 items-start justify-between md:mb-4">
+        <div className="flex-1 items-center gap-3">
           <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
             isActive ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
           }`}>
             <Server className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-900 truncate">{pool.url}</h3>
-            <p className="text-sm text-gray-600 truncate">{pool.user}</p>
+            <h3 className="flex-1 font-semibold text-gray-900 truncate">{pool.url}</h3>
+            <p className="flex-1 text-sm text-gray-600 truncate">{pool.user}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 ml-4">

@@ -85,7 +85,7 @@ export function DeviceCard({ device }: DeviceCardProps) {
         <div className="bg-gray-50 rounded-lg p-2">
           <div className="flex items-center gap-2 mb-1">
             <Cpu className="w-4 h-4 text-blue-600" />
-            <span className="text-xs text-gray-600">Chips Count</span>
+            <span className="text-xs text-gray-600">Chip Count</span>
           </div>
           <div className="text-lg font-bold text-blue-700">
             {device.chips ?? '--'}
@@ -96,7 +96,7 @@ export function DeviceCard({ device }: DeviceCardProps) {
         <div className="bg-gray-50 rounded-lg p-2">
           <div className="flex items-center gap-2 mb-1">
             <Fan className="w-4 h-4 text-cyan-500" />
-            <span className="text-xs text-gray-600">Fan</span>
+            <span className="text-xs text-gray-600">Fan Speed</span>
           </div>
           <div className="text-lg font-bold text-cyan-400">
             {device.fanSpeed ?? '--'}
@@ -113,7 +113,7 @@ export function DeviceCard({ device }: DeviceCardProps) {
           <div className="text-lg font-bold text-purple-500">
             {device.voltage !== undefined ? (device.voltage / 1000).toFixed(2) : '--'}
           </div>
-          <div className="text-xs text-gray-500">Volts</div>
+          <div className="text-xs text-gray-500">Mv/V</div>
         </div>
       </div>
 

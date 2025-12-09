@@ -34,7 +34,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         <header className="bg-gray border-r border-gray-200 sticky top-0 z-10">
           <div className="md:px-8 py-4">
             <h1 className="text-2xl font-bold text-blue-600">
-              {currentPage === "home" && "Monitor"}
+              {currentPage === "home" && "Dashboard"}
               {currentPage === "settings" && "Pool Settings"}
               {currentPage === "config" && "Configuration"}
             </h1>

@@ -1,257 +1,82 @@
 import {
-  MinerStats,
-  PoolInfo,
-  DeviceInfo,
-  SummaryInfo,
-  VersionInfo,
-  NotifyInfo,
-  LCDInfo,
-  CoinInfo,
-  RawStatsInfo
+  MinerStats, PoolInfo, DeviceInfo, SummaryInfo, VersionInfo,
+  NotifyInfo, LCDInfo, CoinInfo, RawStatsInfo
 } from '../types/miner';
 
-// Use current hostname dynamically
 const BACKEND_URL =
   import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:3001`;
 
 export class CGMinerAPI {
-  private baseUrl: string;
-
-  constructor(backendUrl: string = BACKEND_URL) {
-    this.baseUrl = backendUrl;
-  }
+  constructor(private baseUrl: string = BACKEND_URL) {}
 
   private async request(endpoint: string, method: string = 'GET', body?: any): Promise<any> {
     try {
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      const r = await fetch(`${this.baseUrl}${endpoint}`, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: body ? JSON.stringify(body) : undefined,
+        headers: { 'Content-Type': 'application/json' },
+        body: body ? JSON.stringify(body) : undefined
       });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return await r.json();
+    } catch (e) { console.error('Backend API Error:', e); throw e; }
+  }
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+  // --- Small helpers to reduce code ---
+  private async tryGet<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
+    try { return await fn(); } catch { return fallback; }
+  }
 
-      return await response.json();
-    } catch (err) {
-      console.error('Backend API Error:', err);
-      throw err;
-    }
+  private async tryPost(endpoint: string, body?: any): Promise<boolean> {
+    try { await this.request(endpoint, 'POST', body); return true; } catch { return false; }
   }
 
   /* ------------------------------ BASIC STATS ------------------------------ */
 
-  async getSummary(): Promise<SummaryInfo | null> {
-    try {
-      return await this.request('/api/stats');
-    } catch {
-      return null;
-    }
-  }
+  getSummary()          { return this.tryGet(() => this.request('/api/stats'), null); }
+  getDevices()          { return this.tryGet(() => this.request('/api/devices'), []); }
+  getPools()            { return this.tryGet(() => this.request('/api/pools'), []); }
+  getStatsRaw()         { return this.tryGet(() => this.request('/api/stats/raw'), []); }
+  getCoin()             { return this.tryGet(() => this.request('/api/coin'), null); }
 
-  async getDevices(): Promise<DeviceInfo[]> {
-    try {
-      return await this.request('/api/devices');
-    } catch {
-      return [];
-    }
-  }
-
-  async getPools(): Promise<PoolInfo[]> {
-    try {
-      return await this.request('/api/pools');
-    } catch {
-      return [];
-    }
-  }
-
-  async getVersion(): Promise<VersionInfo | null> {
-    try {
-      const data = await this.request('/api/version');
-      return data?.version?.[0] || null;
-    } catch {
-      return null;
-    }
-  }
-
-  async getNotify(): Promise<NotifyInfo[]> {
-    try {
-      const data = await this.request('/api/notify');
-      return data?.notify || [];
-    } catch {
-      return [];
-    }
-  }
-
-  async getLcd(): Promise<LCDInfo | null> {
-    try {
-      const data = await this.request('/api/lcd');
-      return data?.lcd?.[0] || null;
-    } catch {
-      return null;
-    }
-  }
-  
-  async getStatsRaw(): Promise<RawStatsInfo[]> {
-    try {
-      return await this.request('/api/stats/raw');
-    } catch {
-      return [];
-    }
-  }
-  
-  async getCoin(): Promise<CoinInfo | null> {
-    try {
-      return await this.request('/api/coin');
-    } catch {
-      return null;
-    }
-  }
+  async getVersion()    { return (await this.tryGet(() => this.request('/api/version'), null))?.version?.[0] || null; }
+  async getNotify()     { return (await this.tryGet(() => this.request('/api/notify'), { notify: [] })).notify; }
+  async getLcd()        { return (await this.tryGet(() => this.request('/api/lcd'), { lcd: [] })).lcd?.[0] || null; }
 
   /* ------------------------------ CONTROL COMMANDS ------------------------------ */
 
-  async restart(): Promise<boolean> {
-    try {
-      await this.request('/api/control/restart', 'POST');
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  async quit(): Promise<boolean> {
-    try {
-      await this.request('/api/control/quit', 'POST');
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  async saveConfig(filename?: string): Promise<boolean> {
-    try {
-      await this.request('/api/control/save', 'POST', filename ? { filename } : {});
-      return true;
-    } catch {
-      return false;
-    }
+  restart()             { return this.tryPost('/api/control/restart'); }
+  quit()                { return this.tryPost('/api/control/quit'); }
+  saveConfig(filename?: string) {
+    return this.tryPost('/api/control/save', filename ? { filename } : {});
   }
 
   /* ------------------------------ POOL CONTROL ------------------------------ */
 
-  async addPool(url: string, user: string, pass: string): Promise<boolean> {
-    try {
-      await this.request('/api/pools/add', 'POST', { url, user, pass });
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  async removePool(poolId: number): Promise<boolean> {
-    try {
-      await this.request('/api/pools/remove', 'POST', { poolId });
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  async enablePool(poolId: number): Promise<boolean> {
-    try {
-      await this.request('/api/pools/enable', 'POST', { poolId });
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  async disablePool(poolId: number): Promise<boolean> {
-    try {
-      await this.request('/api/pools/disable', 'POST', { poolId });
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  async switchPool(poolId: number): Promise<boolean> {
-    try {
-      await this.request('/api/pools/switch', 'POST', { poolId });
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  async setPoolPriority(priorities: number[]): Promise<boolean> {
-    try {
-      await this.request('/api/pools/priority', 'POST', { priorities });
-      return true;
-    } catch {
-      return false;
-    }
-  }
+  addPool(url:string, user:string, pass:string)  { return this.tryPost('/api/pools/add', { url, user, pass }); }
+  removePool(id:number)                           { return this.tryPost('/api/pools/remove', { poolId:id }); }
+  enablePool(id:number)                           { return this.tryPost('/api/pools/enable', { poolId:id }); }
+  disablePool(id:number)                          { return this.tryPost('/api/pools/disable', { poolId:id }); }
+  switchPool(id:number)                           { return this.tryPost('/api/pools/switch', { poolId:id }); }
+  setPoolPriority(priorities:number[])            { return this.tryPost('/api/pools/priority', { priorities }); }
 
   /* ------------------------------ DEVICE CONTROL ------------------------------ */
 
-  async enableDevice(deviceId: number): Promise<boolean> {
-    try {
-      await this.request('/api/devices/enable', 'POST', { deviceId });
-      return true;
-    } catch {
-      return false;
-    }
+  enableDevice(id:number)                         { return this.tryPost('/api/devices/enable', { deviceId:id }); }
+  disableDevice(id:number)                        { return this.tryPost('/api/devices/disable', { deviceId:id }); }
+  setDeviceFrequency(id:number, freq:number)      { return this.tryPost('/api/devices/frequency', { deviceId:id, frequency:freq }); }
+  setDeviceOption(id:number, opt:string, value?:string) {
+    return this.tryPost('/api/devices/set', { deviceId:id, option:opt, value });
   }
 
-  async disableDevice(deviceId: number): Promise<boolean> {
-    try {
-      await this.request('/api/devices/disable', 'POST', { deviceId });
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  async setDeviceFrequency(deviceId: number, frequency: number): Promise<boolean> {
-    try {
-      await this.request('/api/devices/frequency', 'POST', { deviceId, frequency });
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  async setDeviceOption(deviceId: number, option: string, value?: string): Promise<boolean> {
-    try {
-      await this.request('/api/devices/set', 'POST', { deviceId, option, value });
-      return true;
-    } catch {
-      return false;
-    }
+  async setHotplug(seconds:number): Promise<boolean> {
+    try { return (await this.request('/api/devices/hotplug', 'POST', { seconds })).success === true; }
+    catch { return false; }
   }
 
   /* ------------------------------ CONFIG API ------------------------------ */
 
-  async getConfig(): Promise<any> {
-    try {
-      return await this.request('/api/config');
-    } catch {
-      return {};
-    }
-  }
-
-  async setConfig(name: string, value: number): Promise<boolean> {
-    try {
-      await this.request('/api/config/set', 'POST', { name, value });
-      return true;
-    } catch {
-      return false;
-    }
-  }
+  getConfig()            { return this.tryGet(() => this.request('/api/config'), {}); }
+  setConfig(name:string, value:number) { return this.tryPost('/api/config/set', { name, value }); }
 }
 
 export const cgminerAPI = new CGMinerAPI();

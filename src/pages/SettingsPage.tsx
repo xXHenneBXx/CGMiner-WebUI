@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Power, PowerOff, ArrowUp, ArrowDown, RefreshCw, AlertCircle, CheckCircle, Info, Wifi, WifiOff } from 'lucide-react';
+import { Plus, Trash2, Power, PowerOff, ArrowUp, ArrowDown, RefreshCw, AlertCircle, CheckCircle, Info, Wifi, WifiOff, Repeat } from 'lucide-react';
 import { cgminerAPI } from '../services/cgminer';
 import { PoolInfo } from '../types/miner';
 
-interface Message {
-  type: 'success' | 'error' | 'info';
-  text: string;
-  timestamp: number;
-}
+interface Message { type: 'success' | 'error' | 'info'; text: string; timestamp: number; }
+interface MinerDevice { id: string; name: string; status: 'online' | 'offline'; }
 
 export function SettingsPage() {
   const [pools, setPools] = useState<PoolInfo[]>([]);
@@ -21,16 +18,15 @@ export function SettingsPage() {
   const showMessage = (type: 'success' | 'error' | 'info', text: string) => {
     const newMessage: Message = { type, text, timestamp: Date.now() };
     setMessages(prev => [...prev, newMessage]);
-    setTimeout(() => {
-      setMessages(prev => prev.filter(m => m.timestamp !== newMessage.timestamp));
-    }, 5000);
+    setTimeout(() => setMessages(prev => prev.filter(m => m.timestamp !== newMessage.timestamp)), 5000);
   };
 
   const fetchPools = async () => {
     try {
       setLoading(true);
       const poolsData = await cgminerAPI.getPools();
-      setPools(poolsData || []);
+      const poolsWithId = (poolsData || []).map((p: any, idx: number) => ({ ...p, id: typeof p.id === 'number' ? p.id : idx }));
+      setPools(poolsWithId);
       setLoading(false);
     } catch (error) {
       showMessage('error', 'Failed to fetch pools: ' + (error instanceof Error ? error.message : 'Unknown error'));
@@ -38,52 +34,31 @@ export function SettingsPage() {
     }
   };
 
-  useEffect(() => {
-    fetchPools();
-  }, []);
+  useEffect(() => { fetchPools(); }, []);
 
   const validateForm = (): boolean => {
     const errors: { [key: string]: string } = {};
-
-    if (!formData.url.trim()) {
-      errors.url = 'Pool URL is required';
-    } else if (!formData.url.includes(':')) {
-      errors.url = 'URL must include port (e.g., pool.com:3333)';
-    }
-
-    if (!formData.user.trim()) {
-      errors.user = 'Username/wallet address is required';
-    }
-
-    if (!formData.pass.trim()) {
-      errors.pass = 'Password is required (use "x" if not needed)';
-    }
-
+    if (!formData.url.trim()) errors.url = 'Pool URL is required';
+    else if (!formData.url.includes(':')) errors.url = 'URL must include port';
+    if (!formData.user.trim()) errors.user = 'Username/wallet address is required';
+    if (!formData.pass.trim()) errors.pass = 'Password is required (use "x" if not needed)';
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleAddPool = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      showMessage('error', 'Please fix form errors before submitting');
-      return;
-    }
-
+    if (!validateForm()) { showMessage('error', 'Please fix form errors before submitting'); return; }
     setActionLoading('add');
     try {
       const success = await cgminerAPI.addPool(formData.url, formData.user, formData.pass);
-
       if (success) {
         showMessage('success', `Pool added successfully: ${formData.url}`);
         setFormData({ url: '', user: '', pass: '' });
         setFormErrors({});
         setShowAddForm(false);
         setTimeout(fetchPools, 1000);
-      } else {
-        showMessage('error', 'Failed to add pool. Check URL format and try again.');
-      }
+      } else showMessage('error', 'Failed to add pool. Check URL format.');
     } catch (error) {
       showMessage('error', 'Error adding pool: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
@@ -91,23 +66,13 @@ export function SettingsPage() {
   };
 
   const handleRemovePool = async (poolPriority: number, poolUrl: string) => {
-    if (!confirm(`⚠️ Remove pool "${poolUrl}"?\n\nThis action cannot be undone. If this is your only pool, mining will stop.`)) {
-      return;
-    }
-
+    if (!confirm(`⚠️ Remove pool "${poolUrl}"?`)) return;
     setActionLoading(`remove-${poolPriority}`);
     try {
       const success = await cgminerAPI.removePool(poolPriority);
-
-      if (success) {
-        showMessage('success', `Pool removed: ${poolUrl}`);
-        setTimeout(fetchPools, 1000);
-      } else {
-        showMessage('error', 'Failed to remove pool');
-      }
-    } catch (error) {
-      showMessage('error', 'Error removing pool: ' + (error instanceof Error ? error.message : 'Unknown error'));
-    }
+      success ? showMessage('success', `Pool removed: ${poolUrl}`) : showMessage('error', 'Failed to remove pool');
+      setTimeout(fetchPools, 1000);
+    } catch (error) { showMessage('error', 'Error removing pool: ' + (error instanceof Error ? error.message : 'Unknown error')); }
     setActionLoading(null);
   };
 
@@ -115,128 +80,66 @@ export function SettingsPage() {
     setActionLoading(`enable-${poolPriority}`);
     try {
       const success = await cgminerAPI.enablePool(poolPriority);
-
-      if (success) {
-        showMessage('success', `Pool enabled: ${poolUrl}`);
-        setTimeout(fetchPools, 1000);
-      } else {
-        showMessage('error', 'Failed to enable pool');
-      }
-    } catch (error) {
-      showMessage('error', 'Error enabling pool: ' + (error instanceof Error ? error.message : 'Unknown error'));
-    }
+      success ? showMessage('success', `Pool enabled: ${poolUrl}`) : showMessage('error', 'Failed to enable pool');
+      setTimeout(fetchPools, 1000);
+    } catch (error) { showMessage('error', 'Error enabling pool: ' + (error instanceof Error ? error.message : 'Unknown error')); }
     setActionLoading(null);
   };
 
   const handleDisablePool = async (poolPriority: number, poolUrl: string) => {
-    if (pools.filter(p => p.status.toLowerCase().includes('alive')).length <= 1) {
-      showMessage('error', 'Cannot disable the only active pool! Add another pool first.');
-      return;
-    }
-
+    const activePoolsCount = pools.filter(p => p.status.toLowerCase().includes('alive')).length;
+    if (activePoolsCount <= 1) { showMessage('error', 'Cannot disable the only active pool!'); return; }
     setActionLoading(`disable-${poolPriority}`);
     try {
       const success = await cgminerAPI.disablePool(poolPriority);
-
-      if (success) {
-        showMessage('success', `Pool disabled: ${poolUrl}`);
-        setTimeout(fetchPools, 1000);
-      } else {
-        showMessage('error', 'Failed to disable pool');
-      }
-    } catch (error) {
-      showMessage('error', 'Error disabling pool: ' + (error instanceof Error ? error.message : 'Unknown error'));
-    }
+      success ? showMessage('success', `Pool disabled: ${poolUrl}`) : showMessage('error', 'Failed to disable pool');
+      setTimeout(fetchPools, 1000);
+    } catch (error) { showMessage('error', 'Error disabling pool: ' + (error instanceof Error ? error.message : 'Unknown error')); }
     setActionLoading(null);
   };
 
   const handleSwitchPool = async (poolPriority: number, poolUrl: string) => {
-    if (!confirm(`Switch to pool "${poolUrl}"?\n\nThis will make it the highest priority pool and CGMiner will immediately start using it.`)) {
-      return;
-    }
-
+    if (!confirm(`🔄 Switch to pool "${poolUrl}"?`)) return;
     setActionLoading(`switch-${poolPriority}`);
     try {
       const success = await cgminerAPI.switchPool(poolPriority);
-
-      if (success) {
-        showMessage('success', `Switched to pool: ${poolUrl}`);
-        setTimeout(fetchPools, 1000);
-      } else {
-        showMessage('error', 'Failed to switch pool');
-      }
-    } catch (error) {
-      showMessage('error', 'Error switching pool: ' + (error instanceof Error ? error.message : 'Unknown error'));
-    }
+      success ? showMessage('success', `Switched to pool: ${poolUrl}`) : showMessage('error', 'Failed to switch pool');
+      setTimeout(fetchPools, 1000);
+    } catch (error) { showMessage('error', 'Error switching pool: ' + (error instanceof Error ? error.message : 'Unknown error')); }
     setActionLoading(null);
   };
 
-  const handleMovePriority = async (poolPriority: number, direction: 'up' | 'down') => {
-    const currentIndex = pools.findIndex(p => p.priority === poolPriority);
+  const handleMovePriority = async (currentPriority: number, direction: 'up' | 'down') => {
+    if (!pools || pools.length === 0) return;
+    const sortedPools = [...pools].sort((a, b) => a.priority - b.priority);
+    const currentIndex = sortedPools.findIndex((p) => p.priority === currentPriority);
     if (currentIndex === -1) return;
-
     const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    if (targetIndex < 0 || targetIndex >= pools.length) return;
-
-    const newPools = [...pools];
-    [newPools[currentIndex], newPools[targetIndex]] = [newPools[targetIndex], newPools[currentIndex]];
-
-    const priorities = newPools.map((_, idx) => idx);
-
-    setActionLoading('priority');
+    if (targetIndex < 0 || targetIndex >= sortedPools.length) return;
+    [sortedPools[currentIndex], sortedPools[targetIndex]] = [sortedPools[targetIndex], sortedPools[currentIndex]];
+    sortedPools.forEach((pool, index) => (pool.priority = index));
+    setPools(sortedPools);
+    const newPoolOrder = sortedPools.map((pool, i) => (typeof pool.id === 'number' ? pool.id : pool.priority));
+    setActionLoading(`priority-${currentPriority}`);
     try {
-      const success = await cgminerAPI.setPoolPriority(priorities);
-
-      if (success) {
-        showMessage('info', `Pool priority ${direction === 'up' ? 'increased' : 'decreased'}`);
-        setTimeout(fetchPools, 1000);
-      } else {
-        showMessage('error', 'Failed to change pool priority');
-      }
-    } catch (error) {
-      showMessage('error', 'Error changing priority: ' + (error instanceof Error ? error.message : 'Unknown error'));
-    }
+      const success = await cgminerAPI.setPoolPriority(newPoolOrder);
+      success ? showMessage('info', `Pool priority ${direction === 'up' ? 'increased' : 'decreased'}`) : fetchPools();
+    } catch (error) { showMessage('error', 'Error changing priority: ' + (error instanceof Error ? error.message : 'Unknown error')); fetchPools(); }
     setActionLoading(null);
   };
 
-  const getAcceptanceRate = (pool: PoolInfo): number => {
-    const total = pool.accepted + pool.rejected;
-    return total > 0 ? (pool.accepted / total) * 100 : 0;
-  };
+  const getAcceptanceRate = (pool: PoolInfo) => { const total = pool.accepted + pool.rejected; return total > 0 ? (pool.accepted / total) * 100 : 0; };
+  const sortedPools = [...pools].sort((a, b) => a.priority - b.priority);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center md:py-12">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading pool configuration...</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <div className="flex items-center justify-center py-12"><div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div><p className="mt-4 text-gray-600">Loading pool configuration...</p></div></div>;
 
   return (
     <div className="space-y-6">
       {/* Messages */}
-      <div className="flex top-4 right-4 z-50 space-y-2 max-w-md">
+      <div className="fixed top-4 right-4 z-50 space-y-2 max-w-md">
         {messages.map((message) => (
-          <div
-            key={message.timestamp}
-            className={`p-4 rounded-lg shadow-lg flex items-start gap-3 animate-in slide-in-from-right ${
-              message.type === 'success'
-                ? 'bg-green-50 text-green-800 border border-green-200'
-                : message.type === 'error'
-                ? 'bg-red-50 text-red-800 border border-red-200'
-                : 'bg-blue-50 text-blue-800 border border-blue-200'
-            }`}
-          >
-            {message.type === 'success' ? (
-              <CheckCircle className="w-5 h-5 flex-shrink-0" />
-            ) : message.type === 'error' ? (
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            ) : (
-              <Info className="w-5 h-5 flex-shrink-0" />
-            )}
+          <div key={message.timestamp} className={`p-3 rounded-lg shadow-lg flex items-start gap-2 animate-in slide-in-from-right ${message.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : message.type === 'error' ? 'bg-red-50 text-red-800 border border-red-200' : 'bg-blue-50 text-blue-800 border border-blue-200'}`}>
+            {message.type === 'success' ? <CheckCircle className="w-5 h-5 flex-shrink-0" /> : message.type === 'error' ? <AlertCircle className="w-5 h-5 flex-shrink-0" /> : <Info className="w-5 h-5 flex-shrink-0" />}
             <span className="text-sm font-medium">{message.text}</span>
           </div>
         ))}
@@ -245,332 +148,109 @@ export function SettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="flex-1 text-2xl font-bold text-blue-700">Mining Pool Configuration</h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Manage your mining pool connections and failover settings
-          </p>
+          <h2 className="text-2xl font-bold text-blue-600">Mining Pool Configuration</h2>
+          <p className="text-sm text-gray-600 mt-1">Manage your mining pool connections and failover settings</p>
         </div>
-        <div className="flex gap-3">
-          <button
-            onClick={fetchPools}
-            disabled={actionLoading !== null}
-            className="flex-1 items-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+        <div className="flex gap-2">
+          <button onClick={fetchPools} disabled={actionLoading !== null} className="flex items-center gap-1 px-3 py-1 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50">
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
           </button>
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="flex-1 items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            {showAddForm ? 'Cancel' : 'Add Pool'}
+          <button onClick={() => setShowAddForm(!showAddForm)} className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <Plus className="w-4 h-4" /> {showAddForm ? 'Cancel' : 'Add Pool'}
           </button>
         </div>
       </div>
 
       {/* Add Pool Form */}
       {showAddForm && (
-        <div className="flex-1 bg-white rounded-lg shadow-md p-6 border-2 border-blue-200">
-          <h3 className="text-lg font-semibold text-blue-700 mb-4">Add New Mining Pool</h3>
-          <form onSubmit={handleAddPool} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Pool URL <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.url}
-                onChange={(e) => {
-                  setFormData({ ...formData, url: e.target.value });
-                  setFormErrors({ ...formErrors, url: '' });
-                }}
-                placeholder="stratum+tcp://pool.example.com:3333"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                  formErrors.url ? 'border-red-500' : 'border-gray-300'
-                }`}
-                required
-              />
-              {formErrors.url && <p className="text-xs text-red-600 mt-1">{formErrors.url}</p>}
-              <p className="text-xs text-gray-500 mt-1">
-                Include protocol and port (e.g., stratum+tcp://pool.com:3333)
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Username / Wallet Address <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.user}
-                onChange={(e) => {
-                  setFormData({ ...formData, user: e.target.value });
-                  setFormErrors({ ...formErrors, user: '' });
-                }}
-                placeholder="your_wallet_address.worker_name"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                  formErrors.user ? 'border-red-500' : 'border-gray-300'
-                }`}
-                required
-              />
-              {formErrors.user && <p className="text-xs text-red-600 mt-1">{formErrors.user}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.pass}
-                onChange={(e) => {
-                  setFormData({ ...formData, pass: e.target.value });
-                  setFormErrors({ ...formErrors, pass: '' });
-                }}
-                placeholder="x"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                  formErrors.pass ? 'border-red-500' : 'border-gray-300'
-                }`}
-                required
-              />
-              {formErrors.pass && <p className="text-xs text-red-600 mt-1">{formErrors.pass}</p>}
-              <p className="text-xs text-gray-500 mt-1">
-                Most pools use "x" as password. Check pool documentation.
-              </p>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                type="submit"
-                disabled={actionLoading !== null}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-              >
-                {actionLoading === 'add' ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    Adding Pool...
-                  </span>
-                ) : (
-                  'Add Pool'
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowAddForm(false);
-                  setFormErrors({});
-                }}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-              >
-                Cancel
-              </button>
+        <div className="bg-white rounded-lg shadow-md p-4 border-2 border-blue-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Add New Mining Pool</h3>
+          <form onSubmit={handleAddPool} className="space-y-2">
+            {['url','user','pass'].map((field) => (
+              <div key={field}>
+                <label className="block text-sm font-medium text-gray-700">{field === 'url' ? 'Pool URL' : field === 'user' ? 'Username / Wallet' : 'Password'} <span className="text-red-500">*</span></label>
+                <input type="text" value={formData[field as keyof typeof formData]} onChange={(e)=>{setFormData({...formData,[field]:e.target.value}); setFormErrors({...formErrors,[field]:''})}} placeholder={field==='url'?'stratum+tcp://pool.com:3333':field==='user'?'wallet.worker':'x'} className={`w-full px-3 py-1 border rounded-lg focus:ring-2 focus:ring-blue-500 ${formErrors[field]?'border-red-500':'border-gray-300'}`} required />
+                {formErrors[field] && <p className="text-xs text-red-600 mt-1">{formErrors[field]}</p>}
+              </div>
+            ))}
+            <div className="flex gap-2 pt-1">
+              <button type="submit" disabled={actionLoading!==null} className="flex-1 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 font-medium">{actionLoading==='add'?<span className="flex items-center justify-center gap-1"><RefreshCw className="w-4 h-4 animate-spin"/> Adding...</span>:'Add Pool'}</button>
+              <button type="button" onClick={()=>{setShowAddForm(false); setFormErrors({})}} className="flex-1 px-3 py-1 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">Cancel</button>
             </div>
           </form>
         </div>
       )}
 
       {/* Pools List */}
-      <div className="space-y-4">
+      <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Configured Pools ({pools.length})
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900">Configured Pools ({pools.length})</h3>
+          <span className="text-sm text-gray-500">{pools.filter(p=>p.status.toLowerCase().includes('alive')).length} active</span>
         </div>
 
-        {pools.map((pool, index) => {
-          const isActive = pool.status.toLowerCase().includes('alive');
-          const acceptanceRate = getAcceptanceRate(pool);
-
-          return (
-            <div
-              key={index}
-              className={`bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all ${
-                isActive ? 'border-l-4 border-green-500' : 'border-l-4 border-gray-300'
-              }`}
-            >
-              {/* Pool Header */}
-              <div className="flex items-start justify-between mb-4">
+        {sortedPools.map((pool, i)=>{const isActive=pool.status.toLowerCase().includes('alive'); const acceptanceRate=getAcceptanceRate(pool);
+          return(
+            <div key={pool.priority} className={`bg-white rounded-lg shadow-md p-3 hover:shadow-lg transition-all ${isActive?'border-l-4 border-green-500':'border-l-4 border-gray-300'}`}>
+              <div className="flex items-start justify-between mb-2">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-2">
-                    {isActive ? (
-                      <Wifi className="w-5 h-5 text-green-500 flex-shrink-0" />
-                    ) : (
-                      <WifiOff className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                    )}
+                  <div className="flex items-center gap-2 mb-1">
+                    {isActive?<Wifi className="w-5 h-5 text-green-500 flex-shrink-0"/>:<WifiOff className="w-5 h-5 text-gray-400 flex-shrink-0"/>}
                     <h3 className="font-semibold text-gray-900 truncate">{pool.url}</h3>
-                    <span className={`px-2 py-1 text-xs font-bold rounded ${
-                      pool.priority === 0 
-                        ? 'bg-blue-100 text-blue-800' 
-                        : 'bg-gray-100 text-gray-700'
-                    }`}>
-                      {pool.priority === 0 ? 'PRIMARY' : `Priority ${pool.priority}`}
-                    </span>
+                    <span className={`px-2 py-0.5 text-xs font-bold rounded ${pool.priority===0?'bg-blue-100 text-blue-800':'bg-gray-100 text-gray-700'}`}>{pool.priority===0?'PRIMARY':`Priority ${pool.priority}`}</span>
                   </div>
-                  <p className="text-sm text-gray-600 truncate ml-8">{pool.user}</p>
+                  <p className="text-sm text-gray-600 truncate ml-6">{pool.user}</p>
                 </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-2 ml-4">
-                  <button
-                    onClick={() => handleMovePriority(pool.priority, 'up')}
-                    disabled={index === 0 || actionLoading !== null}
-                    className="p-2 text-gray-600 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    title="Increase priority"
-                  >
-                    <ArrowUp className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleMovePriority(pool.priority, 'down')}
-                    disabled={index === pools.length - 1 || actionLoading !== null}
-                    className="p-2 text-gray-600 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    title="Decrease priority"
-                  >
-                    <ArrowDown className="w-4 h-4" />
-                  </button>
-
-                  {!isActive && (
-                    <button
-                      onClick={() => handleSwitchPool(pool.priority, pool.url)}
-                      disabled={actionLoading !== null}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      title="Switch to this pool"
-                    >
-                      {actionLoading === `switch-${pool.priority}` ? (
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Wifi className="w-4 h-4" />
-                      )}
-                    </button>
-                  )}
-
-                  {isActive ? (
-                    <button
-                      onClick={() => handleDisablePool(pool.priority, pool.url)}
-                      disabled={actionLoading !== null}
-                      className="p-2 text-orange-600 hover:bg-orange-50 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      title="Disable pool"
-                    >
-                      {actionLoading === `disable-${pool.priority}` ? (
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <PowerOff className="w-4 h-4" />
-                      )}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleEnablePool(pool.priority, pool.url)}
-                      disabled={actionLoading !== null}
-                      className="p-2 text-green-600 hover:bg-green-50 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      title="Enable pool"
-                    >
-                      {actionLoading === `enable-${pool.priority}` ? (
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Power className="w-4 h-4" />
-                      )}
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => handleRemovePool(pool.priority, pool.url)}
-                    disabled={actionLoading !== null}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    title="Remove pool"
-                  >
-                    {actionLoading === `remove-${pool.priority}` ? (
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="w-4 h-4" />
-                    )}
-                  </button>
+                <div className="flex items-center gap-1 ml-2">
+                  <button onClick={()=>handleMovePriority(pool.priority,'up')} disabled={i===0||actionLoading!==null} className="p-1 text-gray-600 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed" title="Increase priority"><ArrowUp className="w-4 h-4"/></button>
+                  <button onClick={()=>handleMovePriority(pool.priority,'down')} disabled={i===sortedPools.length-1||actionLoading!==null} className="p-1 text-gray-600 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed" title="Decrease priority"><ArrowDown className="w-4 h-4"/></button>
+                  <button onClick={()=>handleSwitchPool(pool.priority,pool.url)} disabled={actionLoading!==null||pool.priority===0} className="p-1 text-blue-600 hover:bg-blue-50 rounded disabled:opacity-30 disabled:cursor-not-allowed" title={pool.priority===0?"Already primary":"Switch to this pool"}>{actionLoading===`switch-${pool.priority}`?<RefreshCw className="w-4 h-4 animate-spin"/>:<Repeat className="w-4 h-4"/>}</button>
+                  {isActive?<button onClick={()=>handleDisablePool(pool.priority,pool.url)} disabled={actionLoading!==null} className="p-1 text-orange-600 hover:bg-orange-50 rounded disabled:opacity-50" title="Disable pool">{actionLoading===`disable-${pool.priority}`?<RefreshCw className="w-4 h-4 animate-spin"/>:<PowerOff className="w-4 h-4"/>}</button>:<button onClick={()=>handleEnablePool(pool.priority,pool.url)} disabled={actionLoading!==null} className="p-1 text-green-600 hover:bg-green-50 rounded disabled:opacity-50" title="Enable pool">{actionLoading===`enable-${pool.priority}`?<RefreshCw className="w-4 h-4 animate-spin"/>:<Power className="w-4 h-4"/>}</button>}
+                  <button onClick={()=>handleRemovePool(pool.priority,pool.url)} disabled={actionLoading!==null} className="p-1 text-red-600 hover:bg-red-50 rounded disabled:opacity-50" title="Remove pool">{actionLoading===`remove-${pool.priority}`?<RefreshCw className="w-4 h-4 animate-spin"/>:<Trash2 className="w-4 h-4"/>}</button>
                 </div>
               </div>
-
-              {/* Pool Statistics */}
-              <div className="grid grid-cols-5 gap-4 pt-4 border-t border-gray-200">
-                <div>
-                  <div className="text-xs text-gray-600 mb-1">Accepted</div>
-                  <div className="text-sm font-semibold text-green-600">
-                    {pool.accepted.toLocaleString()}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-600 mb-1">Rejected</div>
-                  <div className="text-sm font-semibold text-red-600">
-                    {pool.rejected.toLocaleString()}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-600 mb-1">Stale</div>
-                  <div className="text-sm font-semibold text-yellow-600">
-                    {pool.stale.toLocaleString()}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-600 mb-1">Accept Rate</div>
-                  <div className={`text-sm font-semibold ${
-                    acceptanceRate >= 99 ? 'text-green-600' : 
-                    acceptanceRate >= 95 ? 'text-yellow-600' : 
-                    'text-red-600'
-                  }`}>
-                    {acceptanceRate.toFixed(2)}%
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-600 mb-1">Status</div>
-                  <div className={`text-sm font-semibold ${isActive ? 'text-green-600' : 'text-red-600'}`}>
-                    {pool.status}
-                  </div>
-                </div>
+              <div className="grid grid-cols-5 gap-2 pt-2 border-t border-gray-200 text-xs">
+                <div><div>Accepted</div><div className="font-semibold text-green-600">{pool.accepted.toLocaleString()}</div></div>
+                <div><div>Rejected</div><div className="font-semibold text-red-600">{pool.rejected.toLocaleString()}</div></div>
+                <div><div>Stale</div><div className="font-semibold text-yellow-600">{pool.stale.toLocaleString()}</div></div>
+                <div><div>Accept Rate</div><div className={`font-semibold ${acceptanceRate>=99?'text-green-600':acceptanceRate>=95?'text-yellow-600':'text-red-600'}`}>{acceptanceRate.toFixed(2)}%</div></div>
+                <div><div>Status</div><div className={`font-semibold ${isActive?'text-green-600':'text-red-600'}`}>{pool.status}</div></div>
               </div>
             </div>
           );
         })}
 
-        {pools.length === 0 && (
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <Wifi className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+        {pools.length===0 && (
+          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <Wifi className="w-16 h-16 mx-auto mb-2 text-gray-400"/>
             <p className="text-gray-500 font-medium">No pools configured</p>
-            <p className="text-sm text-gray-400 mt-1">
-              Add a pool to start mining
-            </p>
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Add Your First Pool
-            </button>
+            <p className="text-sm text-gray-400">Add a pool to start mining</p>
+            <button onClick={()=>setShowAddForm(true)} className="mt-2 px-4 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Add Your First Pool</button>
           </div>
         )}
       </div>
 
       {/* Info Boxes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
           <div className="flex gap-2">
-            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <Info className="w-5 h-5 text-blue-600 mt-0.5"/>
             <div>
               <h4 className="font-semibold text-blue-900 mb-1">Pool Failover System</h4>
-              <p className="text-sm text-blue-800">
-                CGMiner automatically switches to backup pools if the primary pool fails.
-                Pools are tried in priority order (0 is highest). Configure multiple pools
-                for uninterrupted mining.
-              </p>
+              <p className="text-sm text-blue-800">CGMiner automatically switches to backup pools if the primary pool fails. Pools are tried in priority order (0 is highest). Configure multiple pools for uninterrupted mining.</p>
             </div>
           </div>
         </div>
-
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
           <div className="flex gap-2">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <CheckCircle className="w-5 h-5 text-green-600 mt-0.5"/>
             <div>
               <h4 className="font-semibold text-green-900 mb-1">Best Practices</h4>
-              <ul className="text-sm text-green-800 space-y-1">
+              <ul className="text-sm text-green-800 space-y-0.5">
                 <li>• Always configure at least 2-3 backup pools</li>
                 <li>• Test pools before adding to production</li>
-                <li>• Monitor acceptance rates (should be &gt;99%)</li>
-                <li>• Use pools geographically close to you for lower latency</li>
+                <li>• Monitor acceptance rates (&gt;99%)</li>
+                <li>• Use pools geographically close to you</li>
+                <li>• Use "Switch Pool" for immediate failover testing</li>
               </ul>
             </div>
           </div>

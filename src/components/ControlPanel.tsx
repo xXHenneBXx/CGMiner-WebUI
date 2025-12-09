@@ -124,7 +124,7 @@ export function ControlPanel({ onRefresh }: ControlPanelProps) {
         <button
           onClick={handleRestart}
           disabled={loading !== null}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-orange-500 text-white rounded-lg hover:bg-yellow-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
         >
           <RefreshCw className={`w-5 h-5 ${loading === 'restart' ? 'animate-spin' : ''}`} />
           <span>{loading === 'restart' ? 'Restarting...' : 'Restart CGMiner'}</span>
